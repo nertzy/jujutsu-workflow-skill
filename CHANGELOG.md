@@ -17,6 +17,12 @@ was introduced in 0.3.1; the GitHub Releases for those tags remain the original 
 
 - `verify_jj_version.sh` claims for jj 0.46 workspace colocation: a new workspace in a colocated repo gets a `.git` file under the main repo's `.git/worktrees/`, its Git `HEAD` sits at `@-`, `jj workspace forget` removes the Git worktree, and `jj git colocation enable` converts a `--no-colocate` workspace. On older jj the probe asserts a workspace gets no `.git`
 - Smoke test: `detect_jj_state.sh` reports a jj 0.46+ workspace as `colocated`, not `worktree-shadowed` (skipped on older jj)
+- Command map: non-interactive `jj new --no-edit -A/-B`, `jj describe --stdin`, `jj revert` (replaces `jj backout`), `jj diff --from/--to`, `jj resolve --tool :ours`, `jj bisect run`, `jj evolog -p`, and `jj help -k` for syntax lookup
+- Revsets for `change_id()`, the mutable stack, and `working_copies()`, plus the shell-quoting and `glob:` character-class gotchas
+- Recovery: record the op ID before a risky rewrite, and recover one change with `evolog` + `restore --into` instead of a repo-wide `op restore`
+- Safety: immutable commits, `git.private-commits`, and `snapshot.max-new-file-size`
+- PR handoff: `jj git push --deleted` and the stacked-PR retarget-before-delete order
+- `verify_jj_version.sh` claims for each new command
 
 ### Changed
 
