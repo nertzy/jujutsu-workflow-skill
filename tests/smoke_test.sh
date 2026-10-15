@@ -192,7 +192,8 @@ fi
 # --- G2. a jj 0.46+ workspace is a Git worktree jj owns: colocated, not shadowed ---
 # Its .git file makes it look like section G's shape, but jj's root and Git's
 # toplevel agree, so jj is authoritative there.
-if jj workspace add --help 2>&1 | grep -q -- '--colocate'; then
+ws_help="$(jj workspace add --help 2>&1)"
+if grep -q -- '--colocate' <<<"$ws_help"; then
   jj workspace add --name wsc "$TMP/wsc" >/dev/null 2>&1
   wmode="$(cd "$TMP/wsc" && "$DET" --json | sed -n 's/.*"mode":"\([^"]*\)".*/\1/p')"
   check "detect_jj_state reports a colocated jj workspace as colocated" "$wmode" "colocated"
