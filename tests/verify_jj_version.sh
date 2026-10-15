@@ -301,9 +301,10 @@ if hasflag workspace add -- --colocate; then
     "$(grep -q '\.git/worktrees/wsc' "$T/wsc/.git" 2>/dev/null && echo true || echo false)"
   ws_head="$(git -C "$T/wsc" rev-parse HEAD 2>/dev/null)"
   ws_parent="$(cd "$T/wsc" && jj --no-pager log --no-graph -r @- -T commit_id 2>/dev/null)"
+  ws_symref="$(git -C "$T/wsc" symbolic-ref -q HEAD 2>/dev/null)"
   claim_bool "workspace Git HEAD is detached at @-" \
-    "workspace Git HEAD no longer matches @-" \
-    "$([[ -n "$ws_head" && "$ws_head" == "$ws_parent" ]] && echo true || echo false)"
+    "workspace Git HEAD is attached to a branch or no longer matches @-" \
+    "$([[ -z "$ws_symref" && -n "$ws_head" && "$ws_head" == "$ws_parent" ]] && echo true || echo false)"
   ws_top="$(cd "$T/wsc" && git rev-parse --show-toplevel 2>/dev/null)"
   ws_root="$(cd "$T/wsc" && jj root 2>/dev/null)"
   claim_bool "workspace Git toplevel equals jj root (not shadowed)" \
