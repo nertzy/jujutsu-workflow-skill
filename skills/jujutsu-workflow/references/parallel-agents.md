@@ -43,8 +43,10 @@ jj workspace add ../agent-b        # agent B works here, isolated working copy
 jj workspace list
 ```
 
-On jj 0.46+ in a colocated repo this needs Git 2.42 or newer; with older Git add
-`--no-colocate` (see [git-interop.md](git-interop.md#worktrees--workspaces)).
+On jj 0.46+ in a colocated repo this needs Git 2.42 or newer, the minimum jj
+0.46 supports. With older Git, `--no-colocate` works around it without
+support; upgrade Git where you can (see
+[git-interop.md](git-interop.md#worktrees--workspaces)).
 
 Each workspace has its own `@` but shares the operation log and store, so results
 integrate cleanly and every workspace's history is visible. Never point two agents

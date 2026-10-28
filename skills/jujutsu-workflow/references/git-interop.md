@@ -198,8 +198,10 @@ an external Git repository (`jj git init --git-repo=…`).
 This needs Git 2.42 or newer, because jj runs `git worktree add --orphan`
 (jj 0.46.0 changelog). With older Git, `jj workspace add` fails with
 `Jujutsu requires git >= 2.42.0`. It registers no workspace but leaves the
-empty target directory behind. There, use `jj workspace add --no-colocate`
-(the same path works), which creates a workspace without a `.git`.
+empty target directory behind. `jj workspace add --no-colocate` still works
+there (the same path too) and creates a workspace without a `.git`. That is a
+workaround: jj 0.46 supports only Git 2.42 or newer, so upgrade Git where you
+can.
 
 See [parallel-agents.md](parallel-agents.md). If a higher-level skill suggests a
 git worktree for isolation, use a jj workspace instead — and if the harness

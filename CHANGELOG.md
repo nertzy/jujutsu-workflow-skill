@@ -28,7 +28,7 @@ was introduced in 0.3.1; the GitHub Releases for those tags remain the original 
 ### Changed
 
 - git-interop: a jj 0.46+ workspace counts as colocated; the workspace section covers its Git worktree, cleanup with `jj workspace forget`, and `jj git colocation enable`
-- git-interop and parallel-agents: a colocated jj 0.46+ workspace needs Git 2.42 or newer; with older Git use `jj workspace add --no-colocate`
+- git-interop and parallel-agents: a colocated jj 0.46+ workspace needs Git 2.42 or newer, the minimum jj 0.46 supports; with older Git, `jj workspace add --no-colocate` is an unsupported workaround
 - git-interop and parallel-agents: snapshot a workspace with `jj status` before `jj workspace forget`, which does not snapshot it; `git.colocate = false` turns workspace colocation off, and `jj git colocation enable` fails for a repo backed by an external Git repository
 - Compatibility re-verified on jj 0.46.0 with no drift
 
