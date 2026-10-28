@@ -22,9 +22,10 @@ of five modes:
 `worktree-shadowed` exits **3**, not 0. Treat that exit code as a stop sign.
 
 Authoritative colocation check: `jj git colocation status`. In every version
-this skill verifies (0.42 on), `jj git init` is **colocated by default** (`--no-colocate` opts out), so most jj
-repos an agent meets are colocated. Since jj 0.46, `jj workspace add` in a
-colocated repo is colocated too (see Worktrees → workspaces).
+this skill verifies (0.42 on), `jj git init` is **colocated by default**
+(`--no-colocate` opts out), so most jj repos an agent meets are colocated.
+Since jj 0.46, `jj workspace add` in a colocated repo is colocated too, unless
+the config sets `git.colocate = false` (see Worktrees → workspaces).
 
 ## Harness-provided git worktrees (`worktree-shadowed`)
 
@@ -180,15 +181,19 @@ jj workspace forget <name>            # remove BEFORE deleting the directory
 ```
 
 Since jj 0.46, `jj workspace add` in a colocated repo also creates a matching
-Git worktree: the workspace gets a `.git` file pointing at
-`<main>/.git/worktrees/<dir>`, with Git's `HEAD` detached at `@-` as in the
+Git worktree. `git.colocate = false` in the config turns that off; pass
+`--colocate` when the workspace must have one. The workspace gets a `.git`
+file pointing at `<main>/.git/worktrees/<dir>`, with Git's `HEAD` detached at `@-` as in the
 main checkout. `<dir>` is the workspace directory's name, not the jj workspace
 name; after `jj git colocation enable` it is a generated temporary name.
 Git-reading tools (`gh`, `git merge-base`, linters that find the project
 through `.git`) work there; apply the colocated rules above.
 `jj workspace forget` removes that Git worktree and its `.git` file; delete the
-directory after. Convert a workspace that `jj git colocation status` reports
-as not colocated with `jj git colocation enable`.
+directory after. Forgetting another workspace does not snapshot it, so run
+`jj --no-pager status` inside it first, or its last file edits are lost with
+the directory. Convert a workspace that `jj git colocation status` reports as
+not colocated with `jj git colocation enable`. That fails for a repo backed by
+an external Git repository (`jj git init --git-repo=…`).
 
 This needs Git 2.42 or newer, because jj runs `git worktree add --orphan`
 (jj 0.46.0 changelog). With older Git, `jj workspace add` fails with

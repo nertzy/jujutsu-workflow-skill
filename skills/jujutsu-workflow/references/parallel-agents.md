@@ -53,6 +53,7 @@ at the same working directory.
 Cleanup (order matters):
 
 ```bash
+(cd ../agent-a && jj --no-pager status)  # snapshot its last edits; forget does not
 jj workspace forget <name>     # tell jj first (jj 0.46+ also removes its Git worktree)
 rm -rf ../agent-a              # then remove the directory
 ```
