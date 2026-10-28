@@ -298,8 +298,9 @@ jj commit -m one >/dev/null 2>&1
 echo b >>a
 jj commit -m two >/dev/null 2>&1
 claim "jj help -k revsets prints the revset reference" "jj help -k revsets FAILED" jj help -k revsets
-claim "change_id(<prefix>) resolves a change" "change_id() revset FAILED" \
-  jj --no-pager log --no-graph -r "change_id($(jj --no-pager log --no-graph -r @-- -T 'change_id.short(8)'))"
+want="$(jj --no-pager log --no-graph -r @-- -T change_id)"
+claim_bool "change_id(<prefix>) resolves a change" "change_id() revset FAILED" \
+  "$([[ "$(jj --no-pager log --no-graph -r "change_id(${want:0:8})" -T change_id 2>/dev/null)" == "$want" ]] && echo true || echo false)"
 claim "jj diff --from/--to compares two revisions" "jj diff --from/--to FAILED" jj --no-pager diff --from @-- --to @-
 printf 'two\n\nbody\n' >"$T/msg.txt"
 jj describe -r @- --stdin <"$T/msg.txt" >/dev/null 2>&1
@@ -320,6 +321,8 @@ claim "working_copies() revset parses" "working_copies() revset FAILED" jj --no-
 jj describe -m '[todo] x' >/dev/null 2>&1
 claim_bool "glob:[...] is a character class (substring: matches literally)" "glob:[todo]* now matches literally" \
   "$([[ -z "$(jj --no-pager log --no-graph -r 'description(glob:"[todo]*") & description(substring:"[todo]")' -T change_id)" && -n "$(jj --no-pager log --no-graph -r 'description(substring:"[todo]")' -T change_id)" ]] && echo true || echo false)"
+claim_bool 'glob:"[[]todo]*" matches the literal [todo] prefix' 'glob:"[[]todo]*" no longer matches the prefix' \
+  "$([[ "$(jj --no-pager log --no-graph -r 'description(glob:"[[]todo]*")' -T 'description.first_line()')" == '[todo] x' ]] && echo true || echo false)"
 claim_bool "snapshot.max-new-file-size defaults to 1MiB" "snapshot.max-new-file-size default changed" \
   "$([[ "$(jj config get snapshot.max-new-file-size 2>/dev/null)" == 1MiB ]] && echo true || echo false)"
 git init -q --bare "$T/extras-origin.git"
