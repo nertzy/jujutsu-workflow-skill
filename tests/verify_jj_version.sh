@@ -310,7 +310,7 @@ jj new --no-edit -A @-- -m inserted >/dev/null 2>&1
 claim_bool "jj new --no-edit -A inserts a change without moving @" "jj new --no-edit -A moved @ or failed" \
   "$([[ "$(jj --no-pager log --no-graph -r @ -T change_id)" == "$before" && -n "$(jj --no-pager log --no-graph -r 'description(exact:"inserted\n")' -T change_id)" ]] && echo true || echo false)"
 claim "jj revert -r R -B @ creates the inverse change" "jj revert -r R -B @ FAILED" jj revert -r @- -B @
-claim_bool "jj backout is gone (use jj revert)" "jj backout exists again" "$(yn test -n "$(jj backout --help 2>&1 >/dev/null)")"
+claim_bool "jj backout is gone (use jj revert)" "jj backout exists again" "$(jj backout --help >/dev/null 2>&1 && echo false || echo true)"
 claim "jj evolog -p shows a change's prior versions" "jj evolog -p FAILED" jj --no-pager evolog -r @- -p
 claim "jj op log template self.id() records a restore point" "op log -T 'self.id()' FAILED" \
   jj --no-pager op log -n1 --no-graph -T 'self.id().short(12)'
@@ -332,6 +332,7 @@ claim_bool "git.private-commits blocks pushing matching commits" "git.private-co
   "$(grep -q "since it is private" <<<"$priv" && echo true || echo false)"
 claim "jj git push --deleted exists" "jj git push --deleted missing" hasflag git push -- --deleted
 claim "jj restore --from/--into exists" "jj restore --into missing" hasflag restore -- --into
+cd "$R" || exit 2 # back to the main probe repo
 
 echo "=================================================="
 echo "verify_jj_version: $ok claims hold, $drift drifted"

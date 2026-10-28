@@ -21,6 +21,7 @@ was introduced in 0.3.1; the GitHub Releases for those tags remain the original 
 - Safety: immutable commits, `git.private-commits`, and `snapshot.max-new-file-size`
 - PR handoff: `jj git push --deleted` and the stacked-PR retarget-before-delete order
 - `verify_jj_version.sh` claims for each new command
+- SKILL.md and agent-safety: `jj describe --stdin < msg.md` for multi-line messages, trailers and backticks
 
 ## [1.0.1] - 2026-10-18
 

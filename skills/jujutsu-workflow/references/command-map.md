@@ -51,13 +51,13 @@ jj rebase -d <dest> [-s R | -b R | -r R]    # -d and -o/--onto both work
 jj edit <rev>                               # make <rev> the working copy (not one held by another workspace — see parallel-agents.md)
 jj abandon <rev>                            # drop a change; descendants rebase onto its parent
 jj revert -r R -B @                         # inverse of R as a new change (`jj backout` is gone)
-jj diff --from X --to Y [--stat]            # compare any two revisions
+jj --no-pager diff --from X --to Y [--stat]  # compare any two revisions
 jj resolve --tool :ours <path>              # take one side of a conflict (:theirs for the other); no merge tool
 jj bisect run --range GOOD..BAD -- <cmd>    # find the first bad commit; <cmd> exits 0 = good
-jj evolog -r R -p                           # every prior version of one change, with diffs
+jj --no-pager evolog -r R -p                # every prior version of one change, with diffs
 ```
 
-Look up syntax with `jj help -k revsets` (also `filesets`, `templates`,
+Look up syntax with `jj --no-pager help -k revsets` (also `filesets`, `templates`,
 `bookmarks`) instead of guessing; it prints the reference for the installed
 version without a pager.
 
@@ -95,7 +95,7 @@ Target commits precisely instead of guessing hashes. Test a revset with
 | `conflicts()` | revisions with conflicts |
 | `x::y` / `::x` | ancestry ranges; `x \| y` is union (NOT comma) |
 | `change_id(<prefix>)` | resolve a change-ID prefix that is ambiguous with a commit-ID prefix |
-| `roots(mutable() & ::@)::@` | your mutable stack, bottom to top; add `& bookmarks()` for its bookmarks |
+| `roots(mutable() & ::@)::@` | your mutable stack, from its root through `@` (`jj log` lists it top to bottom); add `& bookmarks()` for its bookmarks |
 | `working_copies()` / `<name>@` | every workspace's `@` / workspace `<name>`'s `@` |
 
 Quote revsets in single quotes so the shell leaves `()`, `|`, and `~` alone.
