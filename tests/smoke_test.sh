@@ -77,8 +77,11 @@ jj git init --colocate >/dev/null 2>&1 || {
   exit 2
 }
 
+# The mode field of detect_jj_state.sh --json, run in the current directory.
+det_mode() { "$DET" --json | sed -n 's/.*"mode":"\([^"]*\)".*/\1/p'; }
+
 # --- A. detection reports colocated ---
-mode="$("$DET" --json | sed -n 's/.*"mode":"\([^"]*\)".*/\1/p')"
+mode="$(det_mode)"
 check "detect_jj_state reports colocated" "$mode" "colocated"
 
 # --- B. anti-absorption: describe + jj new keeps two separate commits ---
@@ -162,7 +165,7 @@ if [[ -d "$TMP/work/.claude/worktrees/harness" ]]; then
     cd "$TMP/work/.claude/worktrees/harness" || exit 2
     printf 'edited in the worktree\n' >shadow.txt
   )
-  smode="$(cd "$TMP/work/.claude/worktrees/harness" && "$DET" --json | sed -n 's/.*"mode":"\([^"]*\)".*/\1/p')"
+  smode="$(cd "$TMP/work/.claude/worktrees/harness" && det_mode)"
   check "detect_jj_state flags a harness worktree as shadowed" "$smode" "worktree-shadowed"
 
   (cd "$TMP/work/.claude/worktrees/harness" && "$DET" >/dev/null 2>&1)
@@ -183,7 +186,7 @@ if [[ -d "$TMP/work/.claude/worktrees/harness" ]]; then
   check "shadowed worktree: working_copy reported dirty from git" "$swc" "dirty"
 
   # A normal (non-shadowed) checkout must not regress into the new mode.
-  nmode="$(cd "$TMP/work" && "$DET" --json | sed -n 's/.*"mode":"\([^"]*\)".*/\1/p')"
+  nmode="$(cd "$TMP/work" && det_mode)"
   check "colocated root still detected as colocated" "$nmode" "colocated"
 else
   ng "shadowed worktree: could not create the test worktree"
@@ -195,7 +198,7 @@ fi
 ws_help="$(jj workspace add --help 2>&1)"
 if grep -q -- '--colocate' <<<"$ws_help"; then
   jj workspace add --name wsc "$TMP/wsc" >/dev/null 2>&1
-  wmode="$(cd "$TMP/wsc" && "$DET" --json | sed -n 's/.*"mode":"\([^"]*\)".*/\1/p')"
+  wmode="$(cd "$TMP/wsc" && det_mode)"
   check "detect_jj_state reports a colocated jj workspace as colocated" "$wmode" "colocated"
   (cd "$TMP/wsc" && "$DET" >/dev/null 2>&1)
   check "detect_jj_state exits 0 in a colocated jj workspace" "$?" "0"

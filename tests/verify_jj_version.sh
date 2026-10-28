@@ -342,21 +342,22 @@ cd "$R" || exit 2 # back to the main probe repo
 # new workspace gets a matching Git worktree. Older jj creates a bare jj
 # workspace with no .git at all. The flag decides which set of claims applies.
 if hasflag workspace add -- --colocate; then
-  jj workspace add --name wsc "$T/wsc" >/dev/null 2>&1
+  jj workspace add --name wsc "$T/wscdir" >/dev/null 2>&1
   claim_bool "colocated workspace gets a .git file" \
     "colocated workspace has no .git file (git-interop.md says it does)" \
-    "$(yn test -f "$T/wsc/.git")"
-  claim_bool "the .git file points into the main repo's .git/worktrees/" \
-    "workspace .git no longer points at <main>/.git/worktrees/<name>" \
-    "$(grep -q '\.git/worktrees/wsc' "$T/wsc/.git" 2>/dev/null && echo true || echo false)"
-  ws_head="$(git -C "$T/wsc" rev-parse HEAD 2>/dev/null)"
-  ws_parent="$(cd "$T/wsc" && jj --no-pager log --no-graph -r @- -T commit_id 2>/dev/null)"
-  ws_symref="$(git -C "$T/wsc" symbolic-ref -q HEAD 2>/dev/null)"
+    "$(yn test -f "$T/wscdir/.git")"
+  # Name and directory differ on purpose: the Git worktree is named after the directory.
+  claim_bool "the .git file points at <main>/.git/worktrees/<directory>" \
+    "workspace .git no longer points at <main>/.git/worktrees/<directory>" \
+    "$(grep -q '\.git/worktrees/wscdir$' "$T/wscdir/.git" 2>/dev/null && echo true || echo false)"
+  ws_head="$(git -C "$T/wscdir" rev-parse HEAD 2>/dev/null)"
+  ws_parent="$(cd "$T/wscdir" && jj --no-pager log --no-graph -r @- -T commit_id 2>/dev/null)"
+  ws_symref="$(git -C "$T/wscdir" symbolic-ref -q HEAD 2>/dev/null)"
   claim_bool "workspace Git HEAD is detached at @-" \
     "workspace Git HEAD is attached to a branch or no longer matches @-" \
     "$([[ -z "$ws_symref" && -n "$ws_head" && "$ws_head" == "$ws_parent" ]] && echo true || echo false)"
-  ws_top="$(cd "$T/wsc" && git rev-parse --show-toplevel 2>/dev/null)"
-  ws_root="$(cd "$T/wsc" && jj root 2>/dev/null)"
+  ws_top="$(cd "$T/wscdir" && git rev-parse --show-toplevel 2>/dev/null)"
+  ws_root="$(cd "$T/wscdir" && jj root 2>/dev/null)"
   claim_bool "workspace Git toplevel equals jj root (not shadowed)" \
     "workspace Git toplevel differs from jj root (detect_jj_state would call it shadowed)" \
     "$([[ -n "$ws_root" && "$ws_top" == "$ws_root" ]] && echo true || echo false)"
@@ -364,12 +365,12 @@ if hasflag workspace add -- --colocate; then
   wt_list="$(git worktree list --porcelain 2>/dev/null)"
   claim_bool "jj workspace forget removes the Git worktree" \
     "jj workspace forget leaves the Git worktree behind" \
-    "$(! grep -q "$T/wsc\$" <<<"$wt_list" && ! test -e "$T/wsc/.git" && echo true || echo false)"
+    "$(! grep -q "$T/wscdir\$" <<<"$wt_list" && ! test -e "$T/wscdir/.git" && echo true || echo false)"
 
   jj workspace add --no-colocate --name wsn "$T/wsn" >/dev/null 2>&1
   claim_bool "jj workspace add --no-colocate creates no .git" \
-    "jj workspace add --no-colocate now creates a .git" \
-    "$(yn test ! -e "$T/wsn/.git")"
+    "jj workspace add --no-colocate failed or now creates a .git" \
+    "$(yn test -d "$T/wsn/.jj" -a ! -e "$T/wsn/.git")"
   (cd "$T/wsn" && jj git colocation enable >/dev/null 2>&1)
   claim_bool "jj git colocation enable converts a non-colocated workspace" \
     "jj git colocation enable no longer converts a workspace" \
@@ -378,8 +379,8 @@ if hasflag workspace add -- --colocate; then
 else
   jj workspace add "$T/wsold" >/dev/null 2>&1
   claim_bool "pre-0.46 jj workspace add creates no .git" \
-    "pre-0.46 jj workspace add created a .git" \
-    "$(yn test ! -e "$T/wsold/.git")"
+    "pre-0.46 jj workspace add failed or created a .git" \
+    "$(yn test -d "$T/wsold/.jj" -a ! -e "$T/wsold/.git")"
   jj workspace forget wsold >/dev/null 2>&1
 fi
 
