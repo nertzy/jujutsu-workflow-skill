@@ -33,8 +33,8 @@ These open `$EDITOR` or a TUI and hang an agent. Each has a non-interactive form
 
 | Hangs (do NOT run) | Non-interactive form |
 | --- | --- |
-| `jj describe` (no `-m` or `--stdin`) | `jj describe -m "msg"` or `jj describe --stdin < msg.md` |
-| `jj commit` (no `-m`) | `jj commit -m "msg"`; complex messages: `jj describe --stdin < msg.md && jj commit` |
+| `jj describe` (no `-m` or `--stdin`) | `jj describe -m "msg"`, or `jj describe --stdin` fed by a quoted heredoc |
+| `jj commit` (no `-m`) | `jj commit -m "msg"`; multi-line: `jj describe --stdin` (heredoc), then `jj new` — bare `jj commit` opens the editor even after a describe |
 | `jj squash -i` / `jj squash` opening editor | `jj squash --from R --into R [-m "msg"]` |
 | `jj split` (interactive diff editor) | `jj split <paths> -m "msg"` |
 | `jj diffedit` | edit files directly, then `jj diff` |
@@ -48,8 +48,18 @@ jj describe
 # Good (trivial commit messages)
 jj describe -m "fix: handle empty input"
 # Good (non-trivial commit messages: multi-line, trailers, backticks)
-jj describe --stdin < msg.md
+jj describe --stdin <<'EOF'
+fix: handle empty input
+
+Body with `backticks`.
+
+Signed-off-by: A U Thor <author@example.com>
+EOF
 ```
+
+Feed `--stdin` from a quoted heredoc (`<<'EOF'`) or from a file outside the
+working copy. A message file inside the repository is snapshotted by the same
+command and lands in the change.
 
 If a non-interactive form does not exist for what you need, stop and report it
 rather than running the interactive one.
@@ -67,14 +77,16 @@ Between jj commands, edits live only on disk. Practical consequences:
   snapshotted. Every jj command then prints `Warning: Refused to snapshot some
   files:` with each file's size and the limit; the warning is easy to miss in a
   commit flow, so a generated artifact can drop out of a commit. Raise the limit per command
-  (`jj --config snapshot.max-new-file-size=<bytes> status`) or ignore the file.
+  (`jj --no-pager --config snapshot.max-new-file-size=<bytes> status`) or ignore the file.
 
 ### Immutable commits
 
 `Error: Commit <id> is immutable` means the target is in `immutable()`, which includes
 `immutable_heads()` and their ancestors (plus the root commit). By default the
-heads include trunk, tags, and untracked remote bookmarks you didn't author;
-`jj --no-pager config get 'revset-aliases."immutable_heads()"'` shows the heads. Build
+heads are trunk, tags and every untracked remote bookmark, whoever authored it
+(jj 0.46 adds untracked remote tags).
+`jj --no-pager config list --include-defaults revset-aliases` shows the definitions;
+`jj --no-pager log -r 'immutable_heads()'` lists the head commits. Build
 new changes on top instead. `--ignore-immutable` is only for commits you own that no
 one else has built on; never use it to rewrite trunk.
 

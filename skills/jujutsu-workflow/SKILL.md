@@ -40,7 +40,9 @@ See [references/agent-safety.md](references/agent-safety.md).
 jj --no-pager status
 # edit files (snapshotted on the next jj command)
 jj --no-pager diff
-jj describe --stdin < project-conventional-message.md
+jj describe --stdin <<'EOF'  # quoted heredoc: no file in the repo, backticks stay literal
+<project-conventional message>
+EOF
 jj new -m "<next unit>"     # one change per logical unit
 ```
 
