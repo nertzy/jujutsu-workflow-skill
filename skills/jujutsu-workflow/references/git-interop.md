@@ -183,11 +183,18 @@ Since jj 0.46, `jj workspace add` in a colocated repo also creates a matching
 Git worktree: the workspace gets a `.git` file pointing at
 `<main>/.git/worktrees/<dir>`, with Git's `HEAD` detached at `@-` as in the
 main checkout. `<dir>` is the workspace directory's name, not the jj workspace
-name; after `jj git colocation enable` it is a generated temporary name. Git-reading tools (`gh`, `git merge-base`, linters that find the
-project through `.git`) work there; apply the colocated rules above.
+name; after `jj git colocation enable` it is a generated temporary name.
+Git-reading tools (`gh`, `git merge-base`, linters that find the project
+through `.git`) work there; apply the colocated rules above.
 `jj workspace forget` removes that Git worktree and its `.git` file; delete the
 directory after. Convert a workspace that `jj git colocation status` reports
 as not colocated with `jj git colocation enable`.
+
+This needs Git 2.42 or newer, because jj runs `git worktree add --orphan`
+(jj 0.46.0 changelog). With older Git, `jj workspace add` fails with
+`Jujutsu requires git >= 2.42.0`. It registers no workspace but leaves the
+empty target directory behind. There, use `jj workspace add --no-colocate`
+(the same path works), which creates a workspace without a `.git`.
 
 See [parallel-agents.md](parallel-agents.md). If a higher-level skill suggests a
 git worktree for isolation, use a jj workspace instead — and if the harness
