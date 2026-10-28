@@ -29,7 +29,7 @@ See [references/git-interop.md](references/git-interop.md).
 ## 2. Agent-safety rules (non-negotiable)
 
 - Always `--no-pager` on commands that print. Do **not** write `ui.paginate` into the user's config — `--user` outlives the session and takes paging away from their interactive `jj` too.
-- Always `-m`. **Never** run editor/TUI forms — bare `jj describe|commit|squash`, `jj split` (interactive), `jj squash -i`, `jj resolve`, `jj diffedit` — they hang agents.
+- Always `-m` or `--stdin` (`describe`). **Never** run editor/TUI forms — bare `jj describe|commit|squash`, `jj split` (interactive), `jj squash -i`, `jj resolve`, `jj diffedit` — they hang agents.
 - `jj` snapshots the working copy only when a jj command runs, **not** on every file write.
 
 See [references/agent-safety.md](references/agent-safety.md).
@@ -40,7 +40,9 @@ See [references/agent-safety.md](references/agent-safety.md).
 jj --no-pager status
 # edit files (snapshotted on the next jj command)
 jj --no-pager diff
-jj describe -m "<project-conventional message>"
+jj describe --stdin <<'EOF'  # quoted heredoc: no file in the repo, backticks stay literal
+<project-conventional message>
+EOF
 jj new -m "<next unit>"     # one change per logical unit
 ```
 

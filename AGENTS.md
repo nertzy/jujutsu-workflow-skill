@@ -57,7 +57,7 @@ remote, PR, CI, and audit interface.
 2. **Detect repo state before mutating** (`git-only` / `jj-only` / `colocated` /
    `worktree-shadowed` / `none`). `worktree-shadowed` exits 3: a harness-created git
    worktree under a jj repo, where jj answers for the parent — run no `jj` there.
-3. **Agent-safety is non-negotiable:** `--no-pager`, always `-m`, never editor/TUI forms.
+3. **Agent-safety is non-negotiable:** `--no-pager`, always `-m` (or `jj describe --stdin` for multi-line messages), never editor/TUI forms.
 4. **Never push to protected/default branches; never rewrite public history** unless allowed.
 5. **Recover with the operation log** (`jj op log`, `jj undo`, `jj op restore`) before destructive Git recovery.
 6. **Always finish with the verification gate** showing both `jj` and Git state.

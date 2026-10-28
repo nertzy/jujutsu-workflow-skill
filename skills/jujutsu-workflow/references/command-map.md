@@ -42,13 +42,24 @@ jj --no-pager log --limit 10              # graph; add -T '<template>' for custo
 jj --no-pager diff [--stat] [--git]       # changes in @ (or -r <rev>)
 jj describe -m "msg"                       # set @'s description
 jj new [REV] -m "msg"                       # start a new change (REV = parent)
+jj new --no-edit -A R -m "msg"              # insert a change after R (-B: before) without moving @; rebases R's descendants, so check `working_copies()` first
+jj describe -r R --stdin <<'EOF' … EOF     # multi-line description, no editor; a message file inside the repo would be snapshotted into the change
 jj commit -m "msg"                          # finalize @ and open a fresh empty @
 jj split <paths> -m "msg"                   # non-interactive: paths → first commit
 jj squash [--from R] [--into R] [-m msg]    # move changes between commits
 jj rebase -d <dest> [-s R | -b R | -r R]    # -d and -o/--onto both work
 jj edit <rev>                               # make <rev> the working copy (not one held by another workspace — see parallel-agents.md)
-jj abandon <rev>                            # drop a change
+jj abandon <rev>                            # drop a change; descendants rebase onto its parent
+jj revert -r R -B @                         # inverse of R as a new change (`jj backout` is gone)
+jj --no-pager diff --from X --to Y [--stat]  # compare any two revisions
+jj resolve --tool :ours <path>              # take one side of a conflict (:theirs for the other); no merge tool
+jj bisect run --range GOOD..BAD -- <cmd>    # find the first bad commit; <cmd> exits 0 = good; moves @ — afterwards run the `jj op restore <id>` it prints
+jj --no-pager evolog -r R -p                # every prior version of one change, with diffs
 ```
+
+Look up syntax with `jj --no-pager help -k revsets` (also `filesets`, `templates`,
+`bookmarks`) instead of guessing; it prints the reference for the installed
+version without a pager.
 
 ## Bookmarks & Git remote (verified)
 
@@ -83,6 +94,14 @@ Target commits precisely instead of guessing hashes. Test a revset with
 | `description(substring:"text")` | match on description. **Bare `description("text")` is a `glob:` pattern** and won't match a full message (descriptions store a trailing `\n`) — use `substring:` for a fragment, or `exact:"text\n"` for an exact match |
 | `conflicts()` | revisions with conflicts |
 | `x::y` / `::x` | ancestry ranges; `x \| y` is union (NOT comma) |
+| `change_id(<prefix>)` | resolve a change-ID prefix that a bookmark or tag of the same name hides |
+| `roots(mutable() & ::@)::@` | your mutable stack, from its root through `@` (`jj log` lists it top to bottom); add `& bookmarks()` for its bookmarks |
+| `working_copies()` / `<name>@` | every workspace's `@` / workspace `<name>`'s `@` |
+
+Quote revsets in single quotes so the shell leaves `()`, `|`, and `~` alone.
+`glob:` patterns treat `[...]` as a character class: `description(glob:"[todo]*")`
+does not match a literal `[todo]` prefix. Escape the bracket for the prefix,
+`description(glob:"[[]todo]*")`; `substring:"[todo]"` matches it anywhere.
 
 Templates use jj's own language: join with `concat(...)`, the field is
 `description` (not `desc`), and after `jj describe` the `@` pointer **moves** — verify

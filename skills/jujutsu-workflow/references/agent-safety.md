@@ -33,8 +33,8 @@ These open `$EDITOR` or a TUI and hang an agent. Each has a non-interactive form
 
 | Hangs (do NOT run) | Non-interactive form |
 | --- | --- |
-| `jj describe` (no `-m`) | `jj describe -m "msg"` |
-| `jj commit` (no `-m`) | `jj commit -m "msg"` |
+| `jj describe` (no `-m` or `--stdin`) | `jj describe -m "msg"`, or `jj describe --stdin` fed by a quoted heredoc |
+| `jj commit` (no `-m`) | `jj commit -m "msg"`; multi-line: `jj describe --stdin` (heredoc), then `jj new` — bare `jj commit` opens the editor even after a describe |
 | `jj squash -i` / `jj squash` opening editor | `jj squash --from R --into R [-m "msg"]` |
 | `jj split` (interactive diff editor) | `jj split <paths> -m "msg"` |
 | `jj diffedit` | edit files directly, then `jj diff` |
@@ -45,9 +45,21 @@ Good vs bad:
 ```bash
 # Bad — opens $EDITOR, hangs
 jj describe
-# Good
+# Good (trivial commit messages)
 jj describe -m "fix: handle empty input"
+# Good (non-trivial commit messages: multi-line, trailers, backticks)
+jj describe --stdin <<'EOF'
+fix: handle empty input
+
+Body with `backticks`.
+
+Signed-off-by: A U Thor <author@example.com>
+EOF
 ```
+
+Feed `--stdin` from a quoted heredoc (`<<'EOF'`) or from a file outside the
+working copy. A message file inside the repository is snapshotted by the same
+command and lands in the change.
 
 If a non-interactive form does not exist for what you need, stop and report it
 rather than running the interactive one.
@@ -61,6 +73,28 @@ Between jj commands, edits live only on disk. Practical consequences:
 - After editing files, run a jj command (`jj status`) to capture them before you
   rely on the operation log as a safety net.
 - For real safety, wire hooks that snapshot on session boundaries (next section).
+- New files over `snapshot.max-new-file-size` (default 1 MiB) are **not**
+  snapshotted. Every jj command then prints `Warning: Refused to snapshot some
+  files:` with each file's size and the limit; the warning is easy to miss in a
+  commit flow, so a generated artifact can drop out of a commit. Raise the limit per command
+  (`jj --no-pager --config snapshot.max-new-file-size=<bytes> status`) or ignore the file.
+
+### Immutable commits
+
+`Error: Commit <id> is immutable` means the target is in `immutable()`, which includes
+`immutable_heads()` and their ancestors (plus the root commit). By default the
+heads are trunk, tags and every untracked remote bookmark, whoever authored it
+(jj 0.46 adds untracked remote tags).
+`jj --no-pager config list --include-defaults revset-aliases` shows the definitions;
+`jj --no-pager log -r 'immutable_heads()'` lists the head commits. Build
+new changes on top instead. `--ignore-immutable` is only for commits you own that no
+one else has built on; never use it to rewrite trunk.
+
+### Keep WIP from being pushed
+
+Set `git.private-commits`, for example `jj config set --repo git.private-commits
+'description(glob:"wip:*")'`. `jj git push` then refuses those commits and
+anything built on them: `Won't push commit <id> since it is private`.
 
 ## 4. Hook recipe (make the safety net real)
 
